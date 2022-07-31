@@ -51,6 +51,7 @@
 			this.dataGridView1.RowTemplate.Height = 29;
 			this.dataGridView1.Size = new System.Drawing.Size(1548, 509);
 			this.dataGridView1.TabIndex = 0;
+			this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridView1_CellFormatting);
 			this.dataGridView1.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellValueChanged);
 			this.dataGridView1.KeyUp += new System.Windows.Forms.KeyEventHandler(this.dataGridView1_KeyUp);
 			// 
@@ -109,7 +110,7 @@
 			this.btnAdd.Name = "btnAdd";
 			this.btnAdd.Size = new System.Drawing.Size(64, 29);
 			this.btnAdd.TabIndex = 6;
-			this.btnAdd.Text = "Add...";
+			this.btnAdd.Text = "&Add...";
 			this.btnAdd.UseVisualStyleBackColor = true;
 			this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
 			// 

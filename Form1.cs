@@ -331,9 +331,23 @@ namespace FFJsonViewer
 
 		private void cboFiles_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			loadFile(files[cboFiles.SelectedIndex]);
-			files.Insert(0, files[cboFiles.SelectedIndex]);
-			files.Remove(files[cboFiles.SelectedIndex]);
+			string file = files[cboFiles.SelectedIndex];
+			loadFile(file);
+			files.RemoveAt(cboFiles.SelectedIndex);
+			files.Insert(0, file);
+		}
+
+		private void dataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+		{
+			if (e.ColumnIndex == 1 && e.Value != null)
+			{
+				if (e.Value.ToString() == "Call" || e.Value.ToString() == "SetPuppet")
+					e.CellStyle.BackColor = Color.LightCyan;
+				if (e.Value.ToString() == "Branch")
+					e.CellStyle.BackColor = Color.LightGreen;
+				if (e.Value.ToString() == "Encount" || e.Value.ToString() == "EncountBoss")
+					e.CellStyle.BackColor = Color.LightPink;
+			}
 		}
 	}
 }
