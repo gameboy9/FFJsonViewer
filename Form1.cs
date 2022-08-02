@@ -26,25 +26,40 @@ namespace FFJsonViewer
 			typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, 
 				null, dataGridView1, new object[] { true });
 
+			bool widthHeightSet = false;
+
 			try
 			{
 				using (TextReader reader = File.OpenText("lastFFJSON.txt"))
 				{
 					Width = Convert.ToInt32(reader.ReadLine());
 					Height = Convert.ToInt32(reader.ReadLine());
+					widthHeightSet = true;
+					if (Width < 1000) Width = 1000;
+					if (Height < 700) Height = 700;
 					Top = Convert.ToInt32(reader.ReadLine());
 					Left = Convert.ToInt32(reader.ReadLine());
 					for (int i = 0; i < 10; i++)
-						files.Add(reader.ReadLine());
+					{
+						string file = reader.ReadLine();
+						if (file != null)
+							files.Add(file);
+					}
 				}
 			}
 			catch
 			{
+				if (!widthHeightSet)
+				{
+					Width = 1000;
+					Height = 700;
+				}
 			}
 			if (files.Count > 0)
+			{
 				loadFile(files[0]);
-
-			refreshFileList();
+				refreshFileList();
+			}
 		}
 
 		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -55,7 +70,7 @@ namespace FFJsonViewer
 				writer.WriteLine(Height);
 				writer.WriteLine(Top);
 				writer.WriteLine(Left);
-				for (int i = 0; i < 10; i++)
+				for (int i = 0; i < files.Count(); i++)
 					writer.WriteLine(files[i]);
 			}
 		}
@@ -64,7 +79,8 @@ namespace FFJsonViewer
 		{
 			OpenFileDialog openFileDialog = new OpenFileDialog();
 			openFileDialog.Filter = "JSON files (*.json)|*.json";
-			openFileDialog.InitialDirectory = Path.GetDirectoryName(files[0]);
+			if (files.Count > 0)
+				openFileDialog.InitialDirectory = Path.GetDirectoryName(files[0]);
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{  //Path.Combine(directory, "Map_30390", "Map_30390", "sc_e_0064_1.json");
 				files.Insert(0, openFileDialog.FileName);
@@ -86,6 +102,9 @@ namespace FFJsonViewer
 
 		private void loadFile(string file)
 		{
+			if (file == null)
+				return;
+
 			string json = File.ReadAllText(file);
 
 			jEvents = JsonConvert.DeserializeObject<EventJSON>(json);
@@ -347,6 +366,8 @@ namespace FFJsonViewer
 					e.CellStyle.BackColor = Color.LightGreen;
 				if (e.Value.ToString() == "Encount" || e.Value.ToString() == "EncountBoss")
 					e.CellStyle.BackColor = Color.LightPink;
+				if (e.Value.ToString() == "ChangeMap")
+					e.CellStyle.BackColor = Color.LightYellow;
 			}
 		}
 	}
