@@ -264,7 +264,7 @@ namespace FFJsonViewer
 
 				if (row.Cells[1].Value != null)
 				{
-					if (row.Cells[1].Value.ToString() == "Call" && Convert.ToInt32(row.Cells[3].Value) > deletedRow)
+					if ((row.Cells[1].Value.ToString() == "Call" || row.Cells[1].Value.ToString() == "Jump") && Convert.ToInt32(row.Cells[3].Value) > deletedRow)
 						row.Cells[3].Value = Convert.ToInt32(row.Cells[3].Value) + txtInsertRows.Value;
 					if ((row.Cells[1].Value.ToString() == "Branch" || row.Cells[1].Value.ToString() == "SetPuppet") && Convert.ToInt32(row.Cells[5].Value) > deletedRow)
 						row.Cells[5].Value = Convert.ToInt32(row.Cells[5].Value) + txtInsertRows.Value;
