@@ -39,6 +39,8 @@ namespace FFJsonViewer
 					if (Height < 700) Height = 700;
 					Top = Convert.ToInt32(reader.ReadLine());
 					Left = Convert.ToInt32(reader.ReadLine());
+					if (Top < 0 || Top > 4000) Top = 100;
+					if (Left < 0 || Left > 4000) Left = 100;
 					for (int i = 0; i < 10; i++)
 					{
 						string file = reader.ReadLine();
@@ -83,12 +85,14 @@ namespace FFJsonViewer
 				openFileDialog.InitialDirectory = Path.GetDirectoryName(files[0]);
 			if (openFileDialog.ShowDialog() == DialogResult.OK)
 			{  //Path.Combine(directory, "Map_30390", "Map_30390", "sc_e_0064_1.json");
-				files.Insert(0, openFileDialog.FileName);
-				if (files.Count > 10)
-					files.RemoveRange(10, files.Count - 10);
+				if (loadFile(openFileDialog.FileName))
+				{
+					files.Insert(0, openFileDialog.FileName);
+					if (files.Count > 10)
+						files.RemoveRange(10, files.Count - 10);
 
-				loadFile(files[0]);
-				refreshFileList();
+					refreshFileList();
+				}
 			}
 		}
 
@@ -100,14 +104,19 @@ namespace FFJsonViewer
 			cboFiles.SelectedIndex = 0;
 		}
 
-		private void loadFile(string file)
+		private bool loadFile(string file)
 		{
 			if (file == null)
-				return;
+				return false;
 
 			string json = File.ReadAllText(file);
 
 			jEvents = JsonConvert.DeserializeObject<EventJSON>(json);
+			if (jEvents.Animations == null)
+			{
+				MessageBox.Show("Invalid Final Fantasy Events JSON file.");
+				return false;
+			}
 
 			dataGridView1.AutoSize = false;
 
@@ -192,6 +201,7 @@ namespace FFJsonViewer
 			}
 
 			fileChanged = false;
+			return true;
 		}
 
 		private void btnSave_Click(object sender, EventArgs e)
@@ -203,20 +213,20 @@ namespace FFJsonViewer
 				EventJSON.Mnemonic n = new EventJSON.Mnemonic();
 				if (row.Cells[0].Value != null)
 				{
-					n.label = row.Cells[0].Value.ToString();
-					n.mnemonic = row.Cells[1].Value.ToString();
-					n.type = Convert.ToInt32(row.Cells[2].Value);
+					n.label = row.Cells[0].Value == null ? "" : row.Cells[0].Value.ToString();
+					n.mnemonic = row.Cells[1].Value == null ? "" : row.Cells[1].Value.ToString();
+					n.type = row.Cells[2].Value == null ? 0 : Convert.ToInt32(row.Cells[2].Value);
 					n.operands = new EventJSON.Operands();
 					n.operands.iValues = new int?[8];
 					n.operands.rValues = new float?[8];
 					n.operands.sValues = new string[8];
 					for (int i = 0; i < 8; i++)
 					{
-						n.operands.iValues[i] = Convert.ToInt32(row.Cells[3 + i].Value);
-						n.operands.rValues[i] = Convert.ToSingle(row.Cells[11 + i].Value);
-						n.operands.sValues[i] = row.Cells[19 + i].Value.ToString();
+						n.operands.iValues[i] = row.Cells[3 + i].Value == null ? 0 : Convert.ToInt32(row.Cells[3 + i].Value);
+						n.operands.rValues[i] = row.Cells[11 + i].Value == null ? 0 : Convert.ToSingle(row.Cells[11 + i].Value);
+						n.operands.sValues[i] = row.Cells[19 + i].Value == null ? "" : row.Cells[19 + i].Value.ToString();
 					}
-					n.comment = row.Cells[27].Value.ToString();
+					n.comment = row.Cells[27].Value == null ? "" : row.Cells[27].Value.ToString();
 
 					m.Add(n);
 				}
@@ -240,6 +250,8 @@ namespace FFJsonViewer
 
 		private void cmdInsertRow_Click(object sender, EventArgs e)
 		{
+			int deletedRow = dataGridView1.SelectedCells[0].RowIndex;
+
 			for (int i = 0; i < txtInsertRows.Value; i++)
 				dataGridView1.Rows.Insert(dataGridView1.SelectedCells[0].RowIndex, "", "", 1, 
 					0, 0, 0, 0, 0, 0, 0, 0,
@@ -249,6 +261,14 @@ namespace FFJsonViewer
 			foreach (DataGridViewRow row in dataGridView1.Rows)
 			{
 				row.HeaderCell.Value = string.Format("{0}", row.Index);
+
+				if (row.Cells[1].Value != null)
+				{
+					if (row.Cells[1].Value.ToString() == "Call" && Convert.ToInt32(row.Cells[3].Value) > deletedRow)
+						row.Cells[3].Value = Convert.ToInt32(row.Cells[3].Value) + txtInsertRows.Value;
+					if ((row.Cells[1].Value.ToString() == "Branch" || row.Cells[1].Value.ToString() == "SetPuppet") && Convert.ToInt32(row.Cells[5].Value) > deletedRow)
+						row.Cells[5].Value = Convert.ToInt32(row.Cells[5].Value) + txtInsertRows.Value;
+				}
 			}
 
 			fileChanged = true;
@@ -256,10 +276,19 @@ namespace FFJsonViewer
 
 		private void btnDeleteRow_Click(object sender, EventArgs e)
 		{
+			int deletedRow = dataGridView1.SelectedCells[0].RowIndex;
 			dataGridView1.Rows.RemoveAt(dataGridView1.SelectedCells[0].RowIndex);
 			foreach (DataGridViewRow row in dataGridView1.Rows)
 			{
 				row.HeaderCell.Value = string.Format("{0}", row.Index);
+
+				if (row.Cells[1].Value != null)
+				{
+					if ((row.Cells[1].Value.ToString() == "Call" || row.Cells[1].Value.ToString() == "Jump") && Convert.ToInt32(row.Cells[3].Value) > deletedRow)
+						row.Cells[3].Value = Convert.ToInt32(row.Cells[3].Value) - 1;
+					if ((row.Cells[1].Value.ToString() == "Branch" || row.Cells[1].Value.ToString() == "SetPuppet") && Convert.ToInt32(row.Cells[5].Value) > deletedRow)
+						row.Cells[5].Value = Convert.ToInt32(row.Cells[5].Value) - 1;
+				}
 			}
 
 			fileChanged = true;
@@ -352,8 +381,6 @@ namespace FFJsonViewer
 		{
 			string file = files[cboFiles.SelectedIndex];
 			loadFile(file);
-			files.RemoveAt(cboFiles.SelectedIndex);
-			files.Insert(0, file);
 		}
 
 		private void dataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
